@@ -9,7 +9,79 @@ from PIL import Image
 import io
 from datetime import datetime
 
-# [Previous CSS and configuration remains the same]
+# Set page configuration
+st.set_page_config(page_title="Gamkers Remote Access", page_icon="🖥️", layout="wide")
+
+# Custom CSS
+st.markdown("""
+<style>
+body {
+    background-color: #121212;
+    color: #00FF00;
+}
+.stApp {
+    background-color: #121212;
+}
+.stTextInput > div > div > input {
+    color: #00FF00;
+    background-color: #1E1E1E;
+    border: 1px solid #00FF00;
+    border-radius: 5px;
+}
+.stButton > button {
+    color: #121212;
+    background-color: #00FF00;
+    border: none;
+    border-radius: 5px;
+}
+.stMarkdown {
+    color: #00FF00;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# Importing external stylesheet
+st.markdown('<style>' + open('./style.css').read() + '</style>', unsafe_allow_html=True)
+
+# API Configuration
+API_URL = "https://gamkertestbot.onrender.com"
+
+def decode_image(base64_string):
+    img_bytes = base64.b64decode(base64_string)
+    return Image.open(io.BytesIO(img_bytes))
+
+def load_lottie(url):
+    try:
+        response = requests.get(url)
+        return response.json() if response.status_code == 200 else None
+    except Exception:
+        return None
+
+def main():
+    # On Hover Tabs Navigation
+    with st.sidebar:
+        tabs = on_hover_tabs(
+            tabName=['Commands', 'Screenshot', 'Message Center'], 
+            iconName=['terminal', 'camera', 'message-square'], 
+            default_choice=0,
+            styles={
+                'navtab': {'background-color':'#1E1E1E', 
+                           'color': '#00FF00', 
+                           'font-size': '18px', 
+                           'transition': '.3s',
+                           'white-space': 'nowrap',
+                           'text-transform': 'uppercase'},
+                'tabOptionsStyle': {':hover :hover': {'color': '#00FF00', 'cursor': 'pointer'}},
+            }
+        )
+
+    if tabs == 'Commands':
+        commands_page()
+    elif tabs == 'Screenshot':
+        screenshot_page()
+    elif tabs == 'Message Center':
+        message_center_page()
+
 
 def commands_page():
     st.title("🖥️ Remote Command Execution")
