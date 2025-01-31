@@ -154,8 +154,8 @@ def message_center_page():
         key="message_container",
         css_styles="""
         {
-            background-color: #1E1E1E;
-            border: 1px solid #00FF00;
+            # background-color: #1E1E1E;
+            # border: 1px solid #00FF00;
             border-radius: 10px;
             padding: 20px;
         }
