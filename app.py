@@ -171,7 +171,7 @@ def screenshot_page():
                 try:
                     response = requests.post(
                         f"{API_URL}/send_message",
-                        json={"message": "cmd"+message, "type": "text"}
+                        json={"message": message, "type": "text"}
                     )
                     if response.status_code == 200:
                         st.success("Message sent successfully!")
