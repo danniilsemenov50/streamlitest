@@ -43,7 +43,7 @@ def display_message(message):
                 st.write(f"**File:** {message['filename']}")
             img = decode_image(message['image'])
             if img:
-                st.image(img, use_column_width=True)
+                st.image(img, use_container_width=True)
         else:  # Text message
             st.write(f"**From:** {message.get('sender', 'Unknown')}")
             st.write(message['text'])
