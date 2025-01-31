@@ -164,7 +164,7 @@ def screenshot_page():
         """,
     ):
         # Message Sending Section
-        message = "get_image"
+        message = "get image"
         
         if st.button("Take Screenshot"):
             if message:
