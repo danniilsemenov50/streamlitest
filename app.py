@@ -1,6 +1,5 @@
 # main.py
 import streamlit as st
-from streamlit.web.server.websocket_headers import _get_websocket_headers
 import json
 import pandas as pd
 from datetime import datetime
@@ -42,7 +41,7 @@ def main():
     st.title("Message Monitor")
     
     # Add API endpoint information
-    st.info("Send POST requests to: https://your-app-name.streamlit.app/api")
+    st.info("Send POST requests to: https://gamkersrat101.streamlit.app/api")
     
     # Clear messages button
     if st.button("Clear All Messages"):
@@ -69,7 +68,8 @@ def main():
         """, unsafe_allow_html=True)
 
 # Handle incoming webhooks
-if _get_websocket_headers() and 'webhook' in _get_websocket_headers().get('path', ''):
+headers = st.context.headers
+if headers and 'webhook' in headers.get('path', ''):
     import asyncio
     async def handle_webhook():
         try:
