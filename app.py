@@ -38,6 +38,12 @@ st.markdown("""
 .stMarkdown {
     color: #00FF00;
 }
+.stRadio > div {
+    color: #00FF00 !important;
+}
+.stRadio > div > label {
+    color: #00FF00 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -48,8 +54,7 @@ def main():
     # Sidebar Navigation
     with st.sidebar:
         selected_page = st.radio("Select Tool", 
-                                 ["Commands", "Screenshot", "Message Center"], 
-                                 label_style="color: #00FF00")
+                                 ["Commands", "Screenshot", "Message Center"])
 
     if selected_page == "Commands":
         commands_page()
