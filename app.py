@@ -31,7 +31,7 @@ def main():
         st.header("Configuration")
         api_url = st.text_input(
             "Flask API URL",
-            value="https://your-flask-api.onrender.com/messages",
+            value="https://gamkertestbot.onrender.com/messages",
             help="Enter your Render-hosted Flask API URL"
         )
 
