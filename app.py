@@ -18,7 +18,7 @@ def main():
     
     # Get POST data if any
     try:
-        body = st.experimental_get_query_params().get("body", [None])[0]
+        body = st.query_params.get("body", None)
         if body:
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             st.session_state.messages.append({"time": timestamp, "data": body})
