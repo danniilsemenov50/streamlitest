@@ -227,7 +227,7 @@ def show_home():
     cols = st.columns(3)
     for idx, c in enumerate(clients.data):
         status = get_client_status(c['last_seen'])
-        card_html = f"""""""""
+        card_html = f"""
         <div class="client-card" id="{c['client_id']}" style="padding: 20px;">
             <h3>{c['hostname']}</h3>
             <p><strong>ID:</strong> {c['client_id']}</p>
@@ -235,7 +235,7 @@ def show_home():
             <p><strong>IP:</strong> {c['ip_address']}</p>
             <p><strong>Status:</strong> <span class="status-{status}">{status.upper()}</span></p>
             <p><strong>Last Seen:</strong> {c['last_seen']}</p>
-        </div>"""""""""
+        </div>"""
         # Use a button for each card. When clicked, store selected client in session_state.
         if cols[idx % 3].markdown(card_html, unsafe_allow_html=True):
             pass
