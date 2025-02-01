@@ -242,7 +242,7 @@ def show_home():
         # Because st.markdown is not clickable by default, we add a button below each card.
         if cols[idx % 3].button("Manage", key=c['client_id']):
             st.session_state["selected_client"] = c['client_id']
-            st.experimental_rerun()  # Rerun the app to display the dashboard
+
 
     # Optionally display a Lottie animation on the home screen
     lottie_animation = load_lottieurl("https://assets3.lottiefiles.com/packages/lf20_yp2m9iwx.json")
