@@ -201,6 +201,7 @@ def render_dashboard():
         st.title("Navigation")
         if st.button("Logout"):
             # logout_user()
+            print("hi")
         
         # Get all clients for current user
         clients = supabase.table('clients')\
