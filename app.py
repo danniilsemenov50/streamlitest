@@ -10,8 +10,8 @@ import time
 import json
 import requests
 
-supabase_url = st.secrets["supabase"]["url"]
-supabase_api_key = st.secrets["supabase"]["api_key"]
+supabase_url = st.secrets["url"]
+supabase_api_key = st.secrets["api_key"]
 
 # Initialize Supabase securely
 supabase = create_client(supabase_url, supabase_api_key)
