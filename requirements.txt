@@ -5,3 +5,4 @@ streamlit-lottie
 streamlit-shadcn-ui
 streamlit-extras
 streamlit-on-Hover-tabs
+supabase
