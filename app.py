@@ -89,7 +89,7 @@ def send_command(client_id: str, command: str):
             "type": "command",
             "content": command,
             "status": "pending",
-            "user_id": "default_user"  # Simplified without authentication
+           
         }
         supabase.table('messages').insert(data).execute()
         return True
