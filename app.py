@@ -79,52 +79,52 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Session State Initialization
-def init_session_state():
-    if 'authenticated' not in st.session_state:
-        st.session_state.authenticated = False
-    if 'user' not in st.session_state:
-        st.session_state.user = None
-    if 'current_page' not in st.session_state:
-        st.session_state.current_page = 'login'
+# def init_session_state():
+#     if 'authenticated' not in st.session_state:
+#         st.session_state.authenticated = False
+#     if 'user' not in st.session_state:
+#         st.session_state.user = None
+#     if 'current_page' not in st.session_state:
+#         st.session_state.current_page = 'login'
 
-# Authentication Functions
-def login_user(email: str, password: str) -> bool:
-    try:
-        response = supabase.auth.sign_in_with_password({
-            "email": email,
-            "password": password
-        })
-        st.session_state.user = response.user
-        st.session_state.authenticated = True
-        return True
-    except Exception as e:
-        st.error(f"Login failed: {str(e)}")
-        return False
+# # Authentication Functions
+# def login_user(email: str, password: str) -> bool:
+#     try:
+#         response = supabase.auth.sign_in_with_password({
+#             "email": email,
+#             "password": password
+#         })
+#         st.session_state.user = response.user
+#         st.session_state.authenticated = True
+#         return True
+#     except Exception as e:
+#         st.error(f"Login failed: {str(e)}")
+#         return False
 
-def register_user(email: str, password: str, confirm_password: str) -> bool:
-    if password != confirm_password:
-        st.error("Passwords do not match")
-        return False
+# def register_user(email: str, password: str, confirm_password: str) -> bool:
+#     if password != confirm_password:
+#         st.error("Passwords do not match")
+#         return False
     
-    try:
-        response = supabase.auth.sign_up({
-            "email": email,
-            "password": password
-        })
-        st.success("Registration successful! Please check your email to verify your account.")
-        return True
-    except Exception as e:
-        st.error(f"Registration failed: {str(e)}")
-        return False
+#     try:
+#         response = supabase.auth.sign_up({
+#             "email": email,
+#             "password": password
+#         })
+#         st.success("Registration successful! Please check your email to verify your account.")
+#         return True
+#     except Exception as e:
+#         st.error(f"Registration failed: {str(e)}")
+#         return False
 
-def logout_user():
-    try:
-        supabase.auth.sign_out()
-        st.session_state.authenticated = False
-        st.session_state.user = None
-        st.experimental_rerun()
-    except Exception as e:
-        st.error(f"Logout failed: {str(e)}")
+# def logout_user():
+#     try:
+#         supabase.auth.sign_out()
+#         st.session_state.authenticated = False
+#         st.session_state.user = None
+#         st.experimental_rerun()
+#     except Exception as e:
+#         st.error(f"Logout failed: {str(e)}")
 
 # Dashboard Helper Functions
 def decode_image(base64_string: str) -> Image.Image:
@@ -200,7 +200,7 @@ def render_dashboard():
     with st.sidebar:
         st.title("Navigation")
         if st.button("Logout"):
-            logout_user()
+            # logout_user()
         
         # Get all clients for current user
         clients = supabase.table('clients')\
@@ -293,15 +293,15 @@ def render_dashboard():
                         st.text(f"Status: {msg['status']}")
 
 def main():
-    init_session_state()
-    
-    if not st.session_state.authenticated:
-        if st.session_state.current_page == 'register':
-            render_register_page()
-        else:
-            render_login_page()
-    else:
-        render_dashboard()
+    # init_session_state()
+    render_dashboard()
+    # if not st.session_state.authenticated:
+    #     if st.session_state.current_page == 'register':
+    #         render_register_page()
+    #     else:
+    #         render_login_page()
+    # else:
+    #     render_dashboard()
 
 if __name__ == "__main__":
     main()
