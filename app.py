@@ -10,11 +10,11 @@ import time
 import json
 import requests
 
-# Initialize Supabase
-supabase = create_client(
-    "https://nufgpguitvkxctpagwwf.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51ZmdwZ3VpdHZreGN0cGFnd3dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY5NTA0MTIsImV4cCI6MjA1MjUyNjQxMn0.-MLSuSnfllGJrrQMEfHrQjxZoeujy6jZiHG9L9jY6Ik"  # replace with your API key if needed
-)
+supabase_url = st.secrets["supabase"]["url"]
+supabase_api_key = st.secrets["supabase"]["api_key"]
+
+# Initialize Supabase securely
+supabase = create_client(supabase_url, supabase_api_key)
 
 # Page Configuration
 st.set_page_config(
