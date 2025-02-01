@@ -281,6 +281,6 @@ if tabs == "Home" or st.session_state["selected_client"] is None:
     show_home()
 else:
     # A client has been selected. Show a "Back" button to return to the home screen.
-    st.sidebar.button("Back to Home", key="back", on_click=lambda: st.session_state.update({"selected_client": None}))
+    # st.sidebar.button("Back to Home", key="back", on_click=lambda: st.session_state.update({"selected_client": None}))
     # Show dashboard for the selected client
     show_client_dashboard(st.session_state["selected_client"])
